@@ -119,9 +119,11 @@ class MongoDBClient:
                 if float(course.get("price", 0.0)) > float(max_price):
                     return False
             desired_level = filters.get("user_level")
-            if desired_level and desired_level != "beginner":
+            if desired_level:
                 levels_order = {"beginner": 0, "intermediate": 1, "advanced": 2}
-                if course.get("level") and levels_order.get(course["level"], 1) - levels_order.get(desired_level, 1) > 1:
+                course_level_num = levels_order.get(course.get("level"), 1)
+                desired_level_num = levels_order.get(desired_level, 1)
+                if course_level_num > desired_level_num + 1:
                     return False
             return True
 

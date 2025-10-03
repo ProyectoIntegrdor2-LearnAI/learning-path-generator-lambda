@@ -401,25 +401,27 @@ IMPORTANTE:
     def _extract_text_from_nova(self, raw_response: Dict[str, Any]) -> str:
         if not raw_response:
             raise ValueError("Respuesta vacía de Nova")
+
+        if "output" in raw_response:
+            output = raw_response["output"]
+            if isinstance(output, dict) and "message" in output:
+                content = output["message"].get("content", [])
+                if isinstance(content, list) and content:
+                    text = content[0].get("text")
+                    if text:
+                        return text
+
         if "outputText" in raw_response:
             return raw_response["outputText"]
-        if "results" in raw_response and isinstance(raw_response["results"], list):
-            for result in raw_response["results"]:
-                if isinstance(result, dict) and result.get("outputText"):
-                    return result["outputText"]
-                if isinstance(result, dict) and "message" in result:
-                    content = result["message"].get("content")
-                    if isinstance(content, list) and content:
-                        text = content[0].get("text")
-                        if text:
-                            return text
+
         if "message" in raw_response:
-            content = raw_response["message"].get("content")
+            content = raw_response["message"].get("content", [])
             if isinstance(content, list) and content:
                 text = content[0].get("text")
                 if text:
                     return text
-        raise ValueError("Formato de respuesta de Nova no soportado")
+
+        raise ValueError(f"Formato de respuesta de Nova no reconocido: {list(raw_response.keys())}")
 
     def _strip_code_fences(self, text: str) -> str:
         text = text.strip()
@@ -447,7 +449,7 @@ IMPORTANTE:
             if not isinstance(node.get("order"), int) or node["order"] < 0:
                 raise ValidationError("Cada nodo debe incluir order como entero >= 0")
             reason = node.get("reason")
-            if not reason or len(reason.split()) < 15:
+            if not reason or len(reason.split()) < 10:
                 raise ValidationError("Cada nodo debe incluir una razón detallada")
 
     def _safe_positive_int(self, value: Any, fallback: int) -> int:
