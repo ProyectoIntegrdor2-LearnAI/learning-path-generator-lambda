@@ -244,7 +244,24 @@ class LearningPathGenerator:
             courses_data,
             key=lambda item: (item.get("lane", 0), item.get("order", 0)),
         )
-        return self.postgres_client.persist_learning_path(user_id, path_data, ordered_courses)
+        safe_path_data = {**path_data}
+        fallback_path_id = safe_path_data.get("path_id", str(uuid.uuid4()))
+        try:
+            persisted_path_id = self.postgres_client.persist_learning_path(user_id, safe_path_data, ordered_courses)
+        except Exception as exc:  # noqa: BLE001
+            logger.error(
+                json.dumps(
+                    {
+                        "event": "postgres_persist_skipped",
+                        "error": str(exc),
+                        "user_id": user_id,
+                        "courses_count": len(ordered_courses),
+                    }
+                )
+            )
+            self._emit_metric("PostgresPersistenceFailedCount", 1)
+            return fallback_path_id
+        return persisted_path_id
 
     def build_response(
         self,
