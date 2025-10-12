@@ -37,12 +37,13 @@ class BedrockClient:
 
     def invoke_nova(self, system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> Dict[str, Any]:
         # Nova Lite doesn't support "system" role, so we combine it with user message
+        # Nova Lite uses simple string content, not the structured format with type/text
         combined_prompt = f"{system_prompt}\n\n{user_prompt}"
         payload = {
             "messages": [
                 {
                     "role": "user",
-                    "content": [{"type": "text", "text": combined_prompt}],
+                    "content": combined_prompt,
                 },
             ],
             "inferenceConfig": {
