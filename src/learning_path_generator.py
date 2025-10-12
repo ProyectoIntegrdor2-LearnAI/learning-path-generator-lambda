@@ -1,25 +1,45 @@
 import json
 import logging
 import os
+
+# Configure logging IMMEDIATELY - BEFORE any other imports
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Log IMMEDIATELY to prove Python is running
+print("=" * 80, flush=True)
+print("LAMBDA MODULE LOADING STARTED", flush=True)
+print("=" * 80, flush=True)
+logger.critical("========== CRITICAL: Module import starting ==========")
+
 import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
-# Configure logging FIRST
-logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
-logger = logging.getLogger(__name__)
-logger.info("========== Loading learning_path_generator module ==========")
+logger.critical("Basic imports complete")
 
 import numpy as np
+logger.critical("NumPy imported")
+
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
+logger.critical("Boto3 imported")
 
-logger.info("Importing utils modules...")
+logger.info("About to import utils modules...")
 from utils.bedrock_client import get_bedrock_client
+logger.critical("Bedrock client imported")
+
 from utils.mongodb_client import get_mongo_client
+logger.critical("MongoDB client imported")
+
 from utils.postgres_client import get_postgres_client
-logger.info("Utils modules imported successfully")
+logger.critical("PostgreSQL client imported")
+
+logger.critical("========== ALL IMPORTS SUCCESSFUL ==========")
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "https://www.learn-ia.app",
