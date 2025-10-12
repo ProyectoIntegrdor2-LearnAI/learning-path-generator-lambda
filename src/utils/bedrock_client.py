@@ -36,15 +36,13 @@ class BedrockClient:
         return self._invoke_with_retry(self._invoke_embedding, text)
 
     def invoke_nova(self, system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> Dict[str, Any]:
+        # Nova Lite doesn't support "system" role, so we combine it with user message
+        combined_prompt = f"{system_prompt}\n\n{user_prompt}"
         payload = {
             "messages": [
                 {
-                    "role": "system",
-                    "content": [{"type": "text", "text": system_prompt}],
-                },
-                {
                     "role": "user",
-                    "content": [{"type": "text", "text": user_prompt}],
+                    "content": [{"type": "text", "text": combined_prompt}],
                 },
             ],
             "inferenceConfig": {
