@@ -14,10 +14,10 @@ Parameters:
     NoEcho: true
   VpcSubnetIds:
     Type: String
-    Description: Subnet IDs separados por coma
+    Description: Comma-separated Subnet IDs
   VpcSecurityGroupIds:
     Type: String
-    Description: Security Group IDs separados por coma
+    Description: Comma-separated Security Group IDs
 
 Globals:
   Api:
