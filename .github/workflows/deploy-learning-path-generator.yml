@@ -52,6 +52,4 @@ jobs:
               Environment=dev \
               AtlasUri="${{ secrets.ATLAS_URI }}" \
               PostgresHost="${{ secrets.POSTGRES_HOST }}" \
-              PostgresPassword="${{ secrets.POSTGRES_PASSWORD }}" \
-              VpcSubnetIds="${{ secrets.VPC_SUBNET_IDS }}" \
-              VpcSecurityGroupIds="${{ secrets.VPC_SG_IDS }}"
+              PostgresPassword="${{ secrets.POSTGRES_PASSWORD }}"

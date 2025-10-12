@@ -12,12 +12,6 @@ Parameters:
   PostgresPassword:
     Type: String
     NoEcho: true
-  VpcSubnetIds:
-    Type: String
-    Description: Comma-separated Subnet IDs
-  VpcSecurityGroupIds:
-    Type: String
-    Description: Comma-separated Security Group IDs
 
 Globals:
   Api:
@@ -36,9 +30,6 @@ Resources:
       CodeUri: src/
       Timeout: 60
       MemorySize: 1024
-      VpcConfig:
-        SubnetIds: !Split [',', !Ref VpcSubnetIds]
-        SecurityGroupIds: !Split [',', !Ref VpcSecurityGroupIds]
       Layers:
         - !Ref CertificatesLayer
       Environment:
@@ -63,7 +54,6 @@ Resources:
           DEFAULT_WEEKS_ESTIMATE: 12
       Policies:
         - AWSLambdaBasicExecutionRole
-        - AWSLambdaVPCAccessExecutionRole
         - Statement:
             - Effect: Allow
               Action:
