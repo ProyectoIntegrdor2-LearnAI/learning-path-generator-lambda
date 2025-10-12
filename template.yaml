@@ -12,6 +12,19 @@ Parameters:
   PostgresPassword:
     Type: String
     NoEcho: true
+  VpcSubnetIds:
+    Type: String
+    Description: Subnet IDs separados por coma
+  VpcSecurityGroupIds:
+    Type: String
+    Description: Security Group IDs separados por coma
+
+Globals:
+  Api:
+    Cors:
+      AllowOrigin: "'https://www.learn-ia.app'"
+      AllowMethods: "'POST, OPTIONS'"
+      AllowHeaders: "'Content-Type, Authorization'"
 
 Resources:
   LearningPathGeneratorFunction:
@@ -23,6 +36,9 @@ Resources:
       CodeUri: src/
       Timeout: 60
       MemorySize: 1024
+      VpcConfig:
+        SubnetIds: !Split [',', !Ref VpcSubnetIds]
+        SecurityGroupIds: !Split [',', !Ref VpcSecurityGroupIds]
       Layers:
         - !Ref CertificatesLayer
       Environment:
@@ -48,6 +64,7 @@ Resources:
           DEFAULT_WEEKS_ESTIMATE: 12
       Policies:
         - AWSLambdaBasicExecutionRole
+        - AWSLambdaVPCAccessExecutionRole
         - Statement:
             - Effect: Allow
               Action:
@@ -60,19 +77,41 @@ Resources:
                 - cloudwatch:PutMetricData
               Resource: '*'
       Events:
-        ApiEvent:
+        GenerateLearningPath:
           Type: Api
           Properties:
-            Path: /api/generate-learning-path
+            Path: /generate-learning-path
             Method: POST
-            Auth:
-              Authorizer: JWTAuthorizer
+            RestApiId: !Ref LearningPathApi
+        OptionsGenerateLearningPath:
+          Type: Api
+          Properties:
+            Path: /generate-learning-path
+            Method: OPTIONS
+            RestApiId: !Ref LearningPathApi
+
+  LearningPathApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowOrigin: "'https://www.learn-ia.app'"
+        AllowMethods: "'POST, OPTIONS'"
+        AllowHeaders: "'Content-Type, Authorization'"
 
   CertificatesLayer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: learnia-rds-ca
+      LayerName: learnia-rds-ca-learning-path
       Description: RDS CA bundle for SSL connections
       ContentUri: layer-certs/
       CompatibleRuntimes:
         - python3.12
+
+Outputs:
+  LearningPathGeneratorApi:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${LearningPathApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  LearningPathGeneratorFunction:
+    Description: Lambda Function ARN
+    Value: !GetAtt LearningPathGeneratorFunction.Arn
