@@ -15,18 +15,17 @@ logger = logging.getLogger(__name__)
 
 class BedrockClient:
     def __init__(self) -> None:
-        region = os.getenv("AWS_REGION", "us-east-2")
         self._embedding_model = os.getenv("EMBEDDING_MODEL", "amazon.titan-embed-text-v2:0")
         self._nova_model = os.getenv("NOVA_MODEL", "amazon.nova-lite-v1:0")
         self._nova_temperature = float(os.getenv("NOVA_TEMPERATURE", "0.7"))
         config = Config(
-            region_name=region,
+            region_name="us-east-2",
             retries={"max_attempts": 3, "mode": "standard"},
             read_timeout=25,
             connect_timeout=5,
             max_pool_connections=10,
         )
-        self._client = boto3.client("bedrock-runtime", region_name=region, config=config)
+        self._client = boto3.client("bedrock-runtime", region_name="us-east-2", config=config)
 
     def generate_embedding(self, text: str) -> List[float]:
         return self._cached_embedding(text)

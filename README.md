@@ -44,7 +44,6 @@ Set the required environment variables before deploying or invoking locally. Sen
 | `POSTGRES_PASSWORD` | PostgreSQL password |
 | `DB_SSL` | Enable SSL when connecting to PostgreSQL (`true`/`false`) |
 | `DB_CA_PATH` | Path to CA bundle (mounted via Lambda layer) |
-| `AWS_REGION` | Region for Bedrock and CloudWatch (default `us-east-2`) |
 | `EMBEDDING_MODEL` | Bedrock embedding model id |
 | `NOVA_MODEL` | Bedrock orchestration model id |
 | `NOVA_TEMPERATURE` | Nova temperature (float) |

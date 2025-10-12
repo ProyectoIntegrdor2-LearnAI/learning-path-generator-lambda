@@ -14,7 +14,6 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: us-east-2
   SAM_STACK_NAME: learnia-learning-path-generator-dev
 
 jobs:
@@ -35,7 +34,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::974724840334:role/gh-actions-deploy-role
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-2
 
       - name: SAM Build
         run: sam build --use-container
@@ -45,7 +44,7 @@ jobs:
           sam deploy \
             --template-file .aws-sam/build/template.yaml \
             --stack-name ${{ env.SAM_STACK_NAME }} \
-            --region ${{ env.AWS_REGION }} \
+            --region us-east-2 \
             --s3-bucket learnia-sam-artifacts-us-east-2 \
             --capabilities CAPABILITY_IAM \
             --no-fail-on-empty-changeset \

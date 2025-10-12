@@ -39,7 +39,7 @@ class LearningPathGenerator:
         self.bedrock = get_bedrock_client()
         self.mongo_client = get_mongo_client()
         self.postgres_client = get_postgres_client()
-        self.cloudwatch = boto3.client("cloudwatch", region_name=os.getenv("AWS_REGION", "us-east-2"))
+        self.cloudwatch = boto3.client("cloudwatch", region_name="us-east-2")
         self.max_courses = int(os.getenv("MAX_COURSES_IN_PATH", "10"))
         self.min_courses = int(os.getenv("MIN_COURSES_IN_PATH", "3"))
         self.default_weeks = int(os.getenv("DEFAULT_WEEKS_ESTIMATE", "12"))

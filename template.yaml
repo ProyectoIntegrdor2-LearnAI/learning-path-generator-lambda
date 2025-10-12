@@ -54,7 +54,6 @@ Resources:
           POSTGRES_PASSWORD: !Ref PostgresPassword
           DB_SSL: "true"
           DB_CA_PATH: /opt/certs/rds-us-east-2-bundle.pem
-          AWS_REGION: us-east-2
           EMBEDDING_MODEL: amazon.titan-embed-text-v2:0
           EMBEDDING_DIM: 1024
           NOVA_MODEL: amazon.nova-lite-v1:0
