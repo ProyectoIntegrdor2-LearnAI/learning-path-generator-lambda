@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+  AtlasUri:
+    Type: String
+  PostgresHost:
+    Type: String
+  PostgresPassword:
+    Type: String
+    NoEcho: true
+  VpcSubnetIds:
+    Type: String
+    Description: Comma-separated Subnet IDs
+  VpcSecurityGroupIds:
+    Type: String
+    Description: Comma-separated Security Group IDs
+
+Globals:
+  Api:
+    Cors:
+      AllowOrigin: "'https://www.learn-ia.app'"
+      AllowMethods: "'POST, OPTIONS'"
+      AllowHeaders: "'Content-Type, Authorization'"
+
+Resources:
+  LearningPathGeneratorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub learnia-learning-path-generator-${Environment}
+      Runtime: python3.12
+      Handler: learning_path_generator.lambda_handler
+      CodeUri: src/
+      Timeout: 60
+      MemorySize: 1024
+      VpcConfig:
+        SubnetIds: !Split [',', !Ref VpcSubnetIds]
+        SecurityGroupIds: !Split [',', !Ref VpcSecurityGroupIds]
+      Layers:
+        - !Ref CertificatesLayer
+      Environment:
+        Variables:
+          ATLAS_URI: !Ref AtlasUri
+          DATABASE_NAME: learnia_db
+          COLLECTION_NAME: courses
+          ATLAS_SEARCH_INDEX: default
+          POSTGRES_HOST: !Ref PostgresHost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: !Ref PostgresPassword
+          DB_SSL: "true"
+          DB_CA_PATH: /opt/certs/rds-us-east-2-bundle.pem
+          AWS_REGION: us-east-2
+          EMBEDDING_MODEL: amazon.titan-embed-text-v2:0
+          EMBEDDING_DIM: 1024
+          NOVA_MODEL: amazon.nova-lite-v1:0
+          NOVA_TEMPERATURE: 0.7
+          MAX_COURSES_IN_PATH: 10
+          MIN_COURSES_IN_PATH: 3
+          DEFAULT_WEEKS_ESTIMATE: 12
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambdaVPCAccessExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource:
+                - arn:aws:bedrock:us-east-2::foundation-model/amazon.titan-embed-text-v2:0
+                - arn:aws:bedrock:us-east-2::foundation-model/amazon.nova-lite-v1:0
+            - Effect: Allow
+              Action:
+                - cloudwatch:PutMetricData
+              Resource: '*'
+      Events:
+        GenerateLearningPath:
+          Type: Api
+          Properties:
+            Path: /generate-learning-path
+            Method: POST
+            RestApiId: !Ref LearningPathApi
+        OptionsGenerateLearningPath:
+          Type: Api
+          Properties:
+            Path: /generate-learning-path
+            Method: OPTIONS
+            RestApiId: !Ref LearningPathApi
+
+  LearningPathApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowOrigin: "'https://www.learn-ia.app'"
+        AllowMethods: "'POST, OPTIONS'"
+        AllowHeaders: "'Content-Type, Authorization'"
+
+  CertificatesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: learnia-rds-ca-learning-path
+      Description: RDS CA bundle for SSL connections
+      ContentUri: layer-certs/
+      CompatibleRuntimes:
+        - python3.12
+
+Outputs:
+  LearningPathGeneratorApi:
+    Description: API Gateway endpoint URL
+    Value: !Sub "https://${LearningPathApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  LearningPathGeneratorFunction:
+    Description: Lambda Function ARN
+    Value: !GetAtt LearningPathGeneratorFunction.Arn

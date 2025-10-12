@@ -1,0 +1,59 @@
+name: Deploy Learning Path Generator Lambda
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'template.yaml'
+      - '.github/workflows/deploy-learning-path-generator.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-2
+  SAM_STACK_NAME: learnia-learning-path-generator-dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::974724840334:role/gh-actions-deploy-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: SAM Build
+        run: sam build --use-container
+
+      - name: SAM Deploy
+        run: |
+          sam deploy \
+            --template-file .aws-sam/build/template.yaml \
+            --stack-name ${{ env.SAM_STACK_NAME }} \
+            --region ${{ env.AWS_REGION }} \
+            --s3-bucket learnia-sam-artifacts-us-east-2 \
+            --capabilities CAPABILITY_IAM \
+            --no-fail-on-empty-changeset \
+            --parameter-overrides \
+              Environment=dev \
+              AtlasUri="${{ secrets.ATLAS_URI }}" \
+              PostgresHost="${{ secrets.POSTGRES_HOST }}" \
+              PostgresPassword="${{ secrets.POSTGRES_PASSWORD }}" \
+              VpcSubnetIds="${{ secrets.VPC_SUBNET_IDS }}" \
+              VpcSecurityGroupIds="${{ secrets.VPC_SG_IDS }}" \
+              UserPoolArn="${{ secrets.USER_POOL_ARN }}"
