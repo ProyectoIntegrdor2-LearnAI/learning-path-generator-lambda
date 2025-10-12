@@ -6,17 +6,20 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
+# Configure logging FIRST
+logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
+logger = logging.getLogger(__name__)
+logger.info("========== Loading learning_path_generator module ==========")
+
 import numpy as np
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
+logger.info("Importing utils modules...")
 from utils.bedrock_client import get_bedrock_client
 from utils.mongodb_client import get_mongo_client
 from utils.postgres_client import get_postgres_client
-
-
-logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
-logger = logging.getLogger(__name__)
+logger.info("Utils modules imported successfully")
 
 CORS_HEADERS = {
     "Access-Control-Allow-Origin": "https://www.learn-ia.app",
