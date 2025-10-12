@@ -82,10 +82,21 @@ class LearningPathGenerator:
         logger.info("LearningPathGenerator initialization complete")
 
     def handle(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        logger.critical("========== HANDLE METHOD STARTED ==========")
         total_start = time.time()
+        
+        logger.critical("Step 1: Extracting user_id...")
         user_id = self._extract_user_id(event)
+        logger.critical(f"User ID extracted: {user_id}")
+        
+        logger.critical("Step 2: Parsing body...")
         body = self._parse_body(event)
+        logger.critical(f"Body parsed successfully")
+        
+        logger.critical("Step 3: Validating request...")
         self._validate_request(body)
+        logger.critical("Request validated")
+        
         logger.info(
             json.dumps(
                 {
@@ -96,10 +107,16 @@ class LearningPathGenerator:
                 }
             )
         )
+        
+        logger.critical("Step 4: Generating embedding...")
         embedding_start = time.time()
         embedding = self.generate_embedding(body["user_query"])
         embedding_time_ms = int((time.time() - embedding_start) * 1000)
+        logger.critical(f"Embedding generated in {embedding_time_ms}ms")
         self._emit_metric("EmbeddingGenerationTimeMs", embedding_time_ms)
+        
+        logger.critical("Step 5: Searching relevant courses...")
+        search_start = time.time()
         courses = self.search_relevant_courses(
             embedding,
             body["num_courses"],
@@ -110,6 +127,9 @@ class LearningPathGenerator:
                 "preferred_platforms": body.get("preferences", {}).get("preferred_platforms"),
             },
         )
+        search_time_ms = int((time.time() - search_start) * 1000)
+        logger.critical(f"Course search completed in {search_time_ms}ms. Found {len(courses)} courses")
+        
         if len(courses) < self.min_courses:
             raise ValidationError("No se encontraron suficientes cursos relevantes para generar la ruta solicitada")
         nova_start = time.time()
