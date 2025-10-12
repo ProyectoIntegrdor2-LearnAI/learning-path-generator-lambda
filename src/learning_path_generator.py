@@ -463,12 +463,9 @@ IMPORTANTE:
 
     def _safe_positive_int(self, value: Any, fallback: int) -> int:
         try:
-            numeric = int(value)
+            numeric = int(float(value))
         except (TypeError, ValueError):
-            try:
-                numeric = int(float(value))
-            except (TypeError, ValueError):  # noqa: PERF203
-                return fallback
+            return fallback
         return numeric if numeric > 0 else fallback
 
 
