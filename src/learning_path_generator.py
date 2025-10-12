@@ -36,13 +36,27 @@ class ValidationError(Exception):
 
 class LearningPathGenerator:
     def __init__(self) -> None:
+        logger.info("Initializing LearningPathGenerator...")
+        logger.info("Getting Bedrock client...")
         self.bedrock = get_bedrock_client()
+        logger.info("Bedrock client initialized")
+        
+        logger.info("Getting MongoDB client...")
         self.mongo_client = get_mongo_client()
+        logger.info("MongoDB client initialized")
+        
+        logger.info("Getting PostgreSQL client...")
         self.postgres_client = get_postgres_client()
+        logger.info("PostgreSQL client initialized")
+        
+        logger.info("Creating CloudWatch client...")
         self.cloudwatch = boto3.client("cloudwatch", region_name="us-east-2")
+        logger.info("CloudWatch client initialized")
+        
         self.max_courses = int(os.getenv("MAX_COURSES_IN_PATH", "10"))
         self.min_courses = int(os.getenv("MIN_COURSES_IN_PATH", "3"))
         self.default_weeks = int(os.getenv("DEFAULT_WEEKS_ESTIMATE", "12"))
+        logger.info("LearningPathGenerator initialization complete")
 
     def handle(self, event: Dict[str, Any]) -> Dict[str, Any]:
         total_start = time.time()
