@@ -15,37 +15,47 @@ logger = logging.getLogger(__name__)
 
 class PostgresClient:
     def __init__(self) -> None:
-        host = os.getenv("POSTGRES_HOST")
-        database = os.getenv("POSTGRES_DB", "postgres")
-        user = os.getenv("POSTGRES_USER", "postgres")
-        password = os.getenv("POSTGRES_PASSWORD")
-        port = int(os.getenv("POSTGRES_PORT", "5432"))
-        if not host or not password:
+        self._host = os.getenv("POSTGRES_HOST")
+        self._database = os.getenv("POSTGRES_DB", "postgres")
+        self._user = os.getenv("POSTGRES_USER", "postgres")
+        self._password = os.getenv("POSTGRES_PASSWORD")
+        self._port = int(os.getenv("POSTGRES_PORT", "5432"))
+        if not self._host or not self._password:
             raise ValueError("POSTGRES_HOST and POSTGRES_PASSWORD environment variables are required")
-        min_conn = int(os.getenv("POSTGRES_POOL_MIN", "1"))
-        max_conn = int(os.getenv("POSTGRES_POOL_MAX", "5"))
-        ssl_enabled = os.getenv("DB_SSL", "false").lower() == "true"
-        connection_kwargs = {
-            "host": host,
-            "port": port,
-            "dbname": database,
-            "user": user,
-            "password": password,
-        }
-        if ssl_enabled:
-            connection_kwargs["sslmode"] = "verify-full"
-            ca_path = os.getenv("DB_CA_PATH")
-            if ca_path:
-                connection_kwargs["sslrootcert"] = ca_path
-        self._pool = pool.SimpleConnectionPool(min_conn, max_conn, **connection_kwargs)
+        self._min_conn = int(os.getenv("POSTGRES_POOL_MIN", "1"))
+        self._max_conn = int(os.getenv("POSTGRES_POOL_MAX", "5"))
+        self._ssl_enabled = os.getenv("DB_SSL", "false").lower() == "true"
+        self._pool = None
+        logger.info("PostgresClient initialized (pool will be created on first use)")
+
+    def _get_pool(self):
+        """Lazy initialization of connection pool"""
+        if self._pool is None:
+            logger.info(f"Creating PostgreSQL connection pool to {self._host}:{self._port}")
+            connection_kwargs = {
+                "host": self._host,
+                "port": self._port,
+                "dbname": self._database,
+                "user": self._user,
+                "password": self._password,
+                "connect_timeout": 10,
+            }
+            if self._ssl_enabled:
+                connection_kwargs["sslmode"] = "verify-full"
+                ca_path = os.getenv("DB_CA_PATH")
+                if ca_path:
+                    connection_kwargs["sslrootcert"] = ca_path
+            self._pool = pool.SimpleConnectionPool(self._min_conn, self._max_conn, **connection_kwargs)
+            logger.info("PostgreSQL connection pool created successfully")
+        return self._pool
 
     @contextmanager
     def connection(self):
-        conn = self._pool.getconn()
+        conn = self._get_pool().getconn()
         try:
             yield conn
         finally:
-            self._pool.putconn(conn)
+            self._get_pool().putconn(conn)
 
     def persist_learning_path(
         self,

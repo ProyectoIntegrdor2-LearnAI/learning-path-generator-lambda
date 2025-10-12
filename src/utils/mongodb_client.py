@@ -14,20 +14,38 @@ logger = logging.getLogger(__name__)
 
 class MongoDBClient:
     def __init__(self) -> None:
-        uri = os.getenv("ATLAS_URI")
-        if not uri:
+        self._uri = os.getenv("ATLAS_URI")
+        if not self._uri:
             raise ValueError("ATLAS_URI environment variable is required")
-        database_name = os.getenv("DATABASE_NAME", "learnia_db")
-        collection_name = os.getenv("COLLECTION_NAME", "courses")
+        self._database_name = os.getenv("DATABASE_NAME", "learnia_db")
+        self._collection_name = os.getenv("COLLECTION_NAME", "courses")
         self._search_index = os.getenv("ATLAS_SEARCH_INDEX", "default")
-        self._client = MongoClient(
-            uri,
-            connectTimeoutMS=5000,
-            socketTimeoutMS=20000,
-            appname="learning-path-generator",
-            retryWrites=True,
-        )
-        self._collection: Collection = self._client[database_name][collection_name]
+        self._client = None
+        self._collection = None
+        logger.info("MongoDBClient initialized (connection will be created on first use)")
+
+    def _get_client(self) -> MongoClient:
+        """Lazy initialization of MongoDB client"""
+        if self._client is None:
+            logger.info(f"Connecting to MongoDB Atlas database: {self._database_name}")
+            self._client = MongoClient(
+                self._uri,
+                connectTimeoutMS=10000,
+                socketTimeoutMS=20000,
+                serverSelectionTimeoutMS=10000,
+                appname="learning-path-generator",
+                retryWrites=True,
+            )
+            logger.info("MongoDB client created successfully")
+        return self._client
+
+    def _get_collection(self) -> Collection:
+        """Get the MongoDB collection (lazy initialization)"""
+        if self._collection is None:
+            client = self._get_client()
+            self._collection = client[self._database_name][self._collection_name]
+            logger.info(f"MongoDB collection '{self._collection_name}' ready")
+        return self._collection
 
     def vector_search(
         self,
@@ -66,7 +84,7 @@ class MongoDBClient:
         ]
         start = time.time()
         try:
-            candidates = list(self._collection.aggregate(pipeline))
+            candidates = list(self._get_collection().aggregate(pipeline))
         except PyMongoError as exc:
             logger.error(json.dumps({"event": "mongodb_vector_search_failed", "error": str(exc)}))
             raise
@@ -95,7 +113,7 @@ class MongoDBClient:
         if not object_ids:
             return {}
         try:
-            documents = self._collection.find({"_id": {"$in": object_ids}})
+            documents = self._get_collection().find({"_id": {"$in": object_ids}})
         except PyMongoError as exc:
             logger.error(json.dumps({"event": "mongodb_fetch_failed", "error": str(exc)}))
             raise
