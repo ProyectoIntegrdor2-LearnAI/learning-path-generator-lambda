@@ -271,7 +271,6 @@ class LearningPathGenerator:
             return event["requestContext"]["authorizer"]["claims"]["sub"]
         except KeyError:
             pass
-        
         body = self._parse_body(event)
         user_id = body.get("user_id")
         
