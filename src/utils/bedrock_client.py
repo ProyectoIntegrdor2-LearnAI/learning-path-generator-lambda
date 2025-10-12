@@ -16,7 +16,8 @@ logger = logging.getLogger(__name__)
 class BedrockClient:
     def __init__(self) -> None:
         self._embedding_model = os.getenv("EMBEDDING_MODEL", "amazon.titan-embed-text-v2:0")
-        self._nova_model = os.getenv("NOVA_MODEL", "amazon.nova-lite-v1:0")
+        # Use inference profile ARN for Nova Lite
+        self._nova_model = os.getenv("NOVA_MODEL", "us.amazon.nova-lite-v1:0")
         self._nova_temperature = float(os.getenv("NOVA_TEMPERATURE", "0.7"))
         config = Config(
             region_name="us-east-2",
