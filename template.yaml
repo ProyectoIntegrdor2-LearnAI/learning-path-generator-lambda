@@ -61,6 +61,7 @@ Resources:
               Resource:
                 - arn:aws:bedrock:us-east-2::foundation-model/amazon.titan-embed-text-v2:0
                 - arn:aws:bedrock:us-east-2:974724840334:inference-profile/us.amazon.nova-lite-v1:0
+                - arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-lite-v1:0
             - Effect: Allow
               Action:
                 - cloudwatch:PutMetricData
