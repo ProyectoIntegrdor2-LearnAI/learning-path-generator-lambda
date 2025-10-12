@@ -55,5 +55,4 @@ jobs:
               PostgresHost="${{ secrets.POSTGRES_HOST }}" \
               PostgresPassword="${{ secrets.POSTGRES_PASSWORD }}" \
               VpcSubnetIds="${{ secrets.VPC_SUBNET_IDS }}" \
-              VpcSecurityGroupIds="${{ secrets.VPC_SG_IDS }}" \
-              UserPoolArn="${{ secrets.USER_POOL_ARN }}"
+              VpcSecurityGroupIds="${{ secrets.VPC_SG_IDS }}"
