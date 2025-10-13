@@ -71,7 +71,7 @@ Resources:
           Type: Api
           Properties:
             Path: /generate-learning-path
-            Method: POST
+            Method: POST 
             RestApiId: !Ref LearningPathApi
         OptionsGenerateLearningPath:
           Type: Api

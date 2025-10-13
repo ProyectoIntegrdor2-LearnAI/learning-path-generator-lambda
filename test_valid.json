@@ -1,0 +1,1 @@
+{"statusCode": 400, "headers": {"Access-Control-Allow-Origin": "https://www.learn-ia.app", "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type, Authorization", "Content-Type": "application/json"}, "body": "{\"error\": \"No se encontraron suficientes cursos relevantes para generar la ruta solicitada\"}"}
