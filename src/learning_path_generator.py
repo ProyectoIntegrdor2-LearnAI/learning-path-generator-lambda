@@ -346,6 +346,7 @@ class LearningPathGenerator:
         estimacion = f"{estimated_weeks} semanas"
         
         persisted = backend_response.get("persisted", True)
+        total_hours = backend_response.get("estimated_total_hours")
         return {
             "id": backend_response.get("path_id"),
             "path_id": backend_response.get("path_id"),
@@ -359,6 +360,8 @@ class LearningPathGenerator:
             "promptOriginal": backend_response.get("user_query", ""),
             "persisted": persisted,
             "guardado": persisted,
+            "estimated_total_hours": total_hours,
+            "horasEstimadas": total_hours,
         }
     
     def _map_difficulty_to_frontend(self, difficulty: str) -> str:
