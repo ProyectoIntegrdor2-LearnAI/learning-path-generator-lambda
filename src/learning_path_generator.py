@@ -305,8 +305,60 @@ class LearningPathGenerator:
             "difficulty_progression": nova_response.get("difficulty_progression", ""),
             "created_at": created_at,
             "status": "active",
+            "user_query": request_payload.get("user_query"),
         }
         return response
+    
+    def map_to_frontend_format(self, backend_response: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Mapea la respuesta del backend al formato esperado por el frontend.
+        
+        Convierte:
+        - path_id -> id
+        - name -> titulo
+        - description -> descripcion
+        - courses con formato completo para el frontend
+        - estimated_weeks -> estimacion (formateado)
+        - user_query -> promptOriginal
+        """
+        cursos_frontend = []
+        for idx, curso in enumerate(backend_response.get("courses", [])):
+            cursos_frontend.append({
+                "titulo": curso.get("title", "Curso sin título"),
+                "descripcion": curso.get("reason", ""),
+                "duracion": curso.get("duration", "Tiempo estimado"),
+                "plataforma": curso.get("platform", "Plataforma Online"),
+                "url": curso.get("url", ""),
+                "nivel": self._map_difficulty_to_frontend(
+                    backend_response.get("difficulty_progression", "Intermedio")
+                ),
+                "lane": curso.get("lane", 0),
+                "order": curso.get("order", idx),
+            })
+        
+        estimated_weeks = backend_response.get("estimated_weeks", 12)
+        estimacion = f"{estimated_weeks} semanas"
+        
+        return {
+            "titulo": backend_response.get("name", "Ruta de Aprendizaje"),
+            "descripcion": backend_response.get("description", ""),
+            "estimacion": estimacion,
+            "nivel": self._map_difficulty_to_frontend(
+                backend_response.get("difficulty_progression", "Intermedio")
+            ),
+            "cursos": cursos_frontend,
+            "promptOriginal": backend_response.get("user_query", ""),
+        }
+    
+    def _map_difficulty_to_frontend(self, difficulty: str) -> str:
+        """Mapea la dificultad a un formato legible para el frontend."""
+        difficulty_lower = difficulty.lower()
+        if "beginner" in difficulty_lower or "básico" in difficulty_lower:
+            return "Básico"
+        elif "advanced" in difficulty_lower or "avanzado" in difficulty_lower:
+            return "Avanzado"
+        else:
+            return "Intermedio"
 
     def _build_nodes_with_metadata(
         self,
@@ -559,10 +611,34 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         result = generator.handle(event)
         elapsed_ms = int((time.time() - start) * 1000)
         logger.info(json.dumps({"event": "path_generation_completed", "total_time_ms": elapsed_ms}))
+        
+        # Verificar si se solicita el formato del frontend
+        body = {}
+        try:
+            body = json.loads(event.get("body", "{}")) if isinstance(event.get("body"), str) else event.get("body", {})
+        except json.JSONDecodeError:
+            pass
+        
+        format_type = body.get("response_format", "backend")
+        
+        if format_type == "frontend":
+            # Devolver solo el formato del frontend
+            frontend_data = generator.map_to_frontend_format(result)
+            response_body = frontend_data
+        elif format_type == "both":
+            # Devolver ambos formatos
+            response_body = {
+                "backend": result,
+                "frontend": generator.map_to_frontend_format(result)
+            }
+        else:
+            # Por defecto, devolver formato backend original
+            response_body = result
+        
         return {
             "statusCode": 200,
             "headers": CORS_HEADERS,
-            "body": json.dumps(result),
+            "body": json.dumps(response_body),
         }
     except ValidationError as exc:
         logger.warning(json.dumps({"event": "validation_error", "error": str(exc)}))
