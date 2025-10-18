@@ -323,23 +323,28 @@ class LearningPathGenerator:
         """
         cursos_frontend = []
         for idx, curso in enumerate(backend_response.get("courses", [])):
-            cursos_frontend.append({
-                "titulo": curso.get("title", "Curso sin título"),
-                "descripcion": curso.get("reason", ""),
-                "duracion": curso.get("duration", "Tiempo estimado"),
-                "plataforma": curso.get("platform", "Plataforma Online"),
-                "url": curso.get("url", ""),
-                "nivel": self._map_difficulty_to_frontend(
-                    backend_response.get("difficulty_progression", "Intermedio")
-                ),
-                "lane": curso.get("lane", 0),
-                "order": curso.get("order", idx),
-            })
+            cursos_frontend.append(
+                {
+                    "titulo": curso.get("title", "Curso sin título"),
+                    "descripcion": curso.get("reason", ""),
+                    "duracion": curso.get("duration", "Tiempo estimado"),
+                    "plataforma": curso.get("platform", "Plataforma Online"),
+                    "url": curso.get("url", ""),
+                    "nivel": self._map_difficulty_to_frontend(
+                        backend_response.get("difficulty_progression", "Intermedio")
+                    ),
+                    "lane": curso.get("lane", 0),
+                    "order": curso.get("order", idx),
+                    "course_id": curso.get("course_id"),
+                }
+            )
         
         estimated_weeks = backend_response.get("estimated_weeks", 12)
         estimacion = f"{estimated_weeks} semanas"
         
         return {
+            "id": backend_response.get("path_id"),
+            "path_id": backend_response.get("path_id"),
             "titulo": backend_response.get("name", "Ruta de Aprendizaje"),
             "descripcion": backend_response.get("description", ""),
             "estimacion": estimacion,
