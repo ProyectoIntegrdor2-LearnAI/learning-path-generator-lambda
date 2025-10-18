@@ -152,7 +152,7 @@ class LearningPathGenerator:
         )
         enriched_nodes = self._build_nodes_with_metadata(nova_response["nodes"], courses)
         persist_start = time.time()
-        path_id = self.persist_learning_path(
+        path_id, persisted = self.persist_learning_path(
             user_id,
             {
                 "name": nova_response["name"],
@@ -169,6 +169,7 @@ class LearningPathGenerator:
             body,
             nova_response,
             enriched_nodes,
+            persisted,
         )
         total_time_ms = int((time.time() - total_start) * 1000)
         self._emit_metric("TotalGenerationTimeMs", total_time_ms)
@@ -239,7 +240,7 @@ class LearningPathGenerator:
         user_id: str,
         path_data: Dict[str, Any],
         courses_data: List[Dict[str, Any]],
-    ) -> str:
+    ) -> Tuple[str, bool]:
         ordered_courses = sorted(
             courses_data,
             key=lambda item: (item.get("lane", 0), item.get("order", 0)),
@@ -260,8 +261,8 @@ class LearningPathGenerator:
                 )
             )
             self._emit_metric("PostgresPersistenceFailedCount", 1)
-            return fallback_path_id
-        return persisted_path_id
+            return fallback_path_id, False
+        return persisted_path_id, True
 
     def build_response(
         self,
@@ -270,6 +271,7 @@ class LearningPathGenerator:
         request_payload: Dict[str, Any],
         nova_response: Dict[str, Any],
         courses: List[Dict[str, Any]],
+        persisted: bool,
     ) -> Dict[str, Any]:
         created_at = datetime.now(timezone.utc).isoformat()
         nodes = sorted(courses, key=lambda item: (item.get("lane", 0), item.get("order", 0)))
@@ -306,6 +308,7 @@ class LearningPathGenerator:
             "created_at": created_at,
             "status": "active",
             "user_query": request_payload.get("user_query"),
+            "persisted": persisted,
         }
         return response
     
@@ -342,6 +345,7 @@ class LearningPathGenerator:
         estimated_weeks = backend_response.get("estimated_weeks", 12)
         estimacion = f"{estimated_weeks} semanas"
         
+        persisted = backend_response.get("persisted", True)
         return {
             "id": backend_response.get("path_id"),
             "path_id": backend_response.get("path_id"),
@@ -353,6 +357,8 @@ class LearningPathGenerator:
             ),
             "cursos": cursos_frontend,
             "promptOriginal": backend_response.get("user_query", ""),
+            "persisted": persisted,
+            "guardado": persisted,
         }
     
     def _map_difficulty_to_frontend(self, difficulty: str) -> str:
