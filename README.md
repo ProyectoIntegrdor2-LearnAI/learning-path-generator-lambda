@@ -252,6 +252,50 @@ Revise además CloudWatch Logs para trazas detalladas (incluye logs de validaci�
 
 ## Pruebas y utilidades
 
+### Scripts de Prueba
+
+Este proyecto incluye dos scripts de prueba para verificar que la Lambda esté funcionando correctamente:
+
+#### 1. `test_lambda_deployment.py` - Suite Completa
+Suite de pruebas automatizadas con 4 casos predefinidos que cubren diferentes escenarios:
+- Prueba básica (beginner - Python para análisis de datos)
+- Prueba intermedia (intermediate - Machine Learning)
+- Prueba avanzada (advanced - Sistemas distribuidos)
+- Prueba de desarrollo web (intermediate - Full Stack)
+
+**Uso:**
+```bash
+python3 test_lambda_deployment.py
+```
+
+**Resultado esperado:** ✅ 4/4 pruebas exitosas con tiempo promedio ~8 segundos
+
+#### 2. `test_lambda_single.py` - Prueba Individual
+Script para probar consultas personalizadas. Permite modificar parámetros como:
+- Query del usuario
+- Nivel (beginner/intermediate/advanced)
+- Número de cursos
+- Tiempo por semana
+- Preferencias (precio, idioma, plataformas)
+
+**Uso:**
+```bash
+python3 test_lambda_single.py
+```
+
+#### 3. Guía de Pruebas
+Ver `TESTING_GUIDE.md` para documentación detallada sobre:
+- Cómo ejecutar las pruebas
+- Formato de requests
+- Parámetros válidos
+- Interpretación de resultados
+- Solución de errores comunes
+
+#### 4. Resultados de Pruebas
+Ver `TEST_RESULTS.md` para el reporte más reciente de las pruebas ejecutadas.
+
+### Utilidad de Diagnóstico
+
 - `src/test_connectivity.py`: Lambda de diagnóstico para probar DNS/HTTP/HTTPS y resolución de endpoints críticos (Atlas y Bedrock). Útil para verificar problemas de red/VPC.
 
 
