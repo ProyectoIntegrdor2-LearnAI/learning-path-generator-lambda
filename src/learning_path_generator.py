@@ -605,6 +605,14 @@ def get_generator() -> LearningPathGenerator:
 
 
 def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    # Handle preflight OPTIONS request
+    if event.get("httpMethod") == "OPTIONS" or event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
+        return {
+            "statusCode": 200,
+            "headers": CORS_HEADERS,
+            "body": "",
+        }
+    
     generator = get_generator()
     start = time.time()
     try:
