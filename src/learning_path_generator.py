@@ -286,6 +286,8 @@ class LearningPathGenerator:
         nova_response: Dict[str, Any],
         courses: List[Dict[str, Any]],
         persisted: bool,
+        estimated_weeks: Optional[int] = None,
+        estimated_total_hours: Optional[int] = None,
     ) -> Dict[str, Any]:
         created_at = datetime.now(timezone.utc).isoformat()
         nodes = sorted(courses, key=lambda item: (item.get("lane", 0), item.get("order", 0)))
@@ -304,10 +306,13 @@ class LearningPathGenerator:
                     "reason": node.get("reason"),
                 }
             )
-        estimated_weeks = self._safe_positive_int(nova_response.get("estimated_weeks"), self.default_weeks)
-        estimated_total_hours = self._safe_positive_int(
+        safe_weeks = estimated_weeks if estimated_weeks is not None else self._safe_positive_int(
+            nova_response.get("estimated_weeks"),
+            self.default_weeks,
+        )
+        safe_total_hours = estimated_total_hours if estimated_total_hours is not None else self._safe_positive_int(
             nova_response.get("estimated_total_hours"),
-            estimated_weeks * request_payload["time_per_week"],
+            safe_weeks * request_payload["time_per_week"],
         )
         response = {
             "path_id": path_id,
@@ -316,8 +321,8 @@ class LearningPathGenerator:
             "description": nova_response.get("description"),
             "courses": response_courses,
             "roadmap_text": nova_response.get("roadmap_text"),
-            "estimated_weeks": estimated_weeks,
-            "estimated_total_hours": estimated_total_hours,
+            "estimated_weeks": safe_weeks,
+            "estimated_total_hours": safe_total_hours,
             "difficulty_progression": nova_response.get("difficulty_progression", ""),
             "created_at": created_at,
             "status": "active",
