@@ -72,8 +72,20 @@ class PostgresClient:
                 with conn.cursor() as cur:
                     cur.execute(
                         """
-                        INSERT INTO user_learning_paths (path_id, user_id, name, description, status, target_hours_per_week)
-                        VALUES (%s, %s, %s, %s, %s, %s)
+                        INSERT INTO user_learning_paths (
+                            path_id,
+                            user_id,
+                            name,
+                            description,
+                            status,
+                            progress_percentage,
+                            target_hours_per_week,
+                            target_completion_date,
+                            priority,
+                            is_public,
+                            mongodb_template_id
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         RETURNING path_id
                         """,
                         (
@@ -82,7 +94,12 @@ class PostgresClient:
                             path_data.get("name"),
                             path_data.get("description"),
                             path_data.get("status", "active"),
+                            float(path_data.get("progress_percentage", 0.0)),
                             path_data.get("target_hours_per_week", 5),
+                            path_data.get("target_completion_date"),
+                            path_data.get("priority", 1),
+                            path_data.get("is_public", False),
+                            path_data.get("mongodb_template_id"),
                         ),
                     )
                     persisted_path_id = cur.fetchone()[0]

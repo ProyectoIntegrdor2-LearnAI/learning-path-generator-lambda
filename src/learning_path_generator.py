@@ -17,7 +17,7 @@ logger.critical("========== CRITICAL: Module import starting ==========")
 
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 logger.critical("Basic imports complete")
@@ -152,12 +152,24 @@ class LearningPathGenerator:
         )
         enriched_nodes = self._build_nodes_with_metadata(nova_response["nodes"], courses)
         persist_start = time.time()
+        estimated_weeks = self._safe_positive_int(nova_response.get("estimated_weeks"), self.default_weeks)
+        estimated_total_hours = self._safe_positive_int(
+            nova_response.get("estimated_total_hours"),
+            estimated_weeks * body["time_per_week"],
+        )
+        target_completion_date = datetime.now(timezone.utc) + timedelta(weeks=estimated_weeks)
+
         path_id, persisted = self.persist_learning_path(
             user_id,
             {
                 "name": nova_response["name"],
                 "description": nova_response["description"],
+                "status": "in_progress",
+                "progress_percentage": 0.0,
                 "target_hours_per_week": body["time_per_week"],
+                "target_completion_date": target_completion_date.date(),
+                "priority": 3,
+                "is_public": False,
             },
             enriched_nodes,
         )
@@ -170,6 +182,8 @@ class LearningPathGenerator:
             nova_response,
             enriched_nodes,
             persisted,
+            estimated_weeks,
+            estimated_total_hours,
         )
         total_time_ms = int((time.time() - total_start) * 1000)
         self._emit_metric("TotalGenerationTimeMs", total_time_ms)
