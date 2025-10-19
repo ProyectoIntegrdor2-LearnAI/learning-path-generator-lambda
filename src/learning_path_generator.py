@@ -164,7 +164,7 @@ class LearningPathGenerator:
             {
                 "name": nova_response["name"],
                 "description": nova_response["description"],
-                "status": "in_progress",
+                "status": "active",
                 "progress_percentage": 0.0,
                 "target_hours_per_week": body["time_per_week"],
                 "target_completion_date": target_completion_date.date(),
