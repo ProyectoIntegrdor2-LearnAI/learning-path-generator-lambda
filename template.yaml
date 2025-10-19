@@ -28,8 +28,8 @@ Resources:
       Runtime: python3.12
       Handler: learning_path_generator.lambda_handler
       CodeUri: src/
-      Timeout: 60
-      MemorySize: 1024
+      Timeout: 300
+      MemorySize: 2048
       Layers:
         - !Ref CertificatesLayer
       Environment:
